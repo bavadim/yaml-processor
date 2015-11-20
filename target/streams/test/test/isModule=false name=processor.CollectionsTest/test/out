@@ -1,0 +1,79 @@
+[0m[[0minfo[0m] [0m[32mCollectionsTest:[0m[0m
+[0m[[0minfo[0m] [0m[31m- sequence of scalars *** FAILED ***[0m[0m
+[0m[[0minfo[0m] [0m[31m  java.lang.RuntimeException: No result when parsing failed[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.sys.package$.error(package.scala:27)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:176)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:162)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$1.apply$mcV$sp(CollectionsTest.scala:13)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$1.apply(CollectionsTest.scala:13)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$1.apply(CollectionsTest.scala:13)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer$$anonfun$apply$1.apply$mcV$sp(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$class.outcomeOf(OutcomeOf.scala:85)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer.apply(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  ...[0m[0m
+[0m[[0minfo[0m] [0m[31m- mapping scalars to scalars *** FAILED ***[0m[0m
+[0m[[0minfo[0m] [0m[31m  java.lang.RuntimeException: No result when parsing failed[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.sys.package$.error(package.scala:27)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:176)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:162)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$2.apply$mcV$sp(CollectionsTest.scala:18)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$2.apply(CollectionsTest.scala:18)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$2.apply(CollectionsTest.scala:18)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer$$anonfun$apply$1.apply$mcV$sp(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$class.outcomeOf(OutcomeOf.scala:85)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer.apply(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  ...[0m[0m
+[0m[[0minfo[0m] [0m[31m- mapping scalars to sequences *** FAILED ***[0m[0m
+[0m[[0minfo[0m] [0m[31m  java.lang.RuntimeException: No result when parsing failed[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.sys.package$.error(package.scala:27)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:176)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:162)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$3.apply$mcV$sp(CollectionsTest.scala:23)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$3.apply(CollectionsTest.scala:23)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$3.apply(CollectionsTest.scala:23)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer$$anonfun$apply$1.apply$mcV$sp(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$class.outcomeOf(OutcomeOf.scala:85)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer.apply(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  ...[0m[0m
+[0m[[0minfo[0m] [0m[31m- sequence of mappings *** FAILED ***[0m[0m
+[0m[[0minfo[0m] [0m[31m  java.lang.RuntimeException: No result when parsing failed[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.sys.package$.error(package.scala:27)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:176)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:162)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$4.apply$mcV$sp(CollectionsTest.scala:29)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$4.apply(CollectionsTest.scala:29)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$4.apply(CollectionsTest.scala:29)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer$$anonfun$apply$1.apply$mcV$sp(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$class.outcomeOf(OutcomeOf.scala:85)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer.apply(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  ...[0m[0m
+[0m[[0minfo[0m] [0m[31m- sequence of sequences *** FAILED ***[0m[0m
+[0m[[0minfo[0m] [0m[31m  java.lang.RuntimeException: No result when parsing failed[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.sys.package$.error(package.scala:27)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:176)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:162)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$5.apply$mcV$sp(CollectionsTest.scala:35)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$5.apply(CollectionsTest.scala:35)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$5.apply(CollectionsTest.scala:35)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer$$anonfun$apply$1.apply$mcV$sp(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$class.outcomeOf(OutcomeOf.scala:85)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer.apply(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  ...[0m[0m
+[0m[[0minfo[0m] [0m[31m- mapping of mappings *** FAILED ***[0m[0m
+[0m[[0minfo[0m] [0m[31m  java.lang.RuntimeException: No result when parsing failed[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.sys.package$.error(package.scala:27)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:176)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at scala.util.parsing.combinator.Parsers$NoSuccess.get(Parsers.scala:162)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$6.apply$mcV$sp(CollectionsTest.scala:40)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$6.apply(CollectionsTest.scala:40)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at processor.CollectionsTest$$anonfun$6.apply(CollectionsTest.scala:40)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer$$anonfun$apply$1.apply$mcV$sp(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$class.outcomeOf(OutcomeOf.scala:85)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)[0m[0m
+[0m[[0minfo[0m] [0m[31m  at org.scalatest.Transformer.apply(Transformer.scala:22)[0m[0m
+[0m[[0minfo[0m] [0m[31m  ...[0m[0m

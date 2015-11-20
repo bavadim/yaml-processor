@@ -1,0 +1,3 @@
+testOnly OtherTest
+testOnly processorOtherTest
+testOnly processor.OtherTest
