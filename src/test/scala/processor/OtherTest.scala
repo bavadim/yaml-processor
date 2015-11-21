@@ -13,17 +13,48 @@ import processor.YAMLProcessor.{Scalar, Sequence, Mapping}
 class OtherTest extends FunSuite with Assertions {
   val f = new FsFixtures("other")
 
-  test("Empty inline map") {
-    assert(Mapping(Map(), None) == YAMLProcessor.parse( """{}""").get)
+ /* test("Empty inline map") {
+    assert(Mapping(Map()) == YAMLProcessor.parse( """{}""").get)
   }
 
-  test("Empty inline list") {
+ test("Empty inline list") {
     assert(Sequence(List(), None) == YAMLProcessor.parse( """[]""").get)
+  }
+
+  test("simple list") {
+    assert(Sequence(List(Scalar("item 1"), Scalar("item2"))) == YAMLProcessor.parse(
+      """|
+        				   |- item 1
+        				   |- item2
+        				   |""".stripMargin).get)
+  }
+
+  test("simple block map") {
+    assert(Mapping(Map(Scalar("key1") -> Scalar("value 1"), Scalar("key2") -> Scalar("value2"))) == YAMLProcessor.parse(
+      """|
+        				   |key1: value 1
+        				   |key2: value2
+        				   |""".stripMargin).get)
+  }
+
+  test("simple flow map") {
+    assert(
+      Mapping(Map(Scalar("hr") -> Scalar("63"), Scalar("avg") -> Scalar("0.288"))) == YAMLProcessor.parse(
+      """
+        |{
+        |     hr: 63,
+        |   avg: 0.288
+        |}
+      """.stripMargin).get)
+  }
+
+  test("simple pair") {
+      assert(Mapping(Map(Scalar("key") -> Scalar("value"))) == YAMLProcessor.parse("""key: value""").get)
   }
 
   test("With empty inline map") {
     assert(
-      Sequence(List(Scalar("foo", None), Mapping(Map(), None), Scalar("bar", None)), None) ==
+      Sequence(List(Scalar("foo"), Mapping(Map()), Scalar("bar"))) ==
         YAMLProcessor.parse(
           """|- foo
             |- {}
@@ -32,43 +63,19 @@ class OtherTest extends FunSuite with Assertions {
 
   test("empty inline list and map") {
     assert(
-      Map("foo_bar" -> "true", "snafu" -> List(), "empty" -> Map()) ==
+      Mapping(Map(Scalar("foo_bar") -> Scalar("true"), Scalar("snafu") -> Sequence(List()),
+        Scalar("empty") -> Mapping(Map()))) ==
         YAMLProcessor.parse(
           """|foo_bar: true
-              				 |snafu: []
-              				 |empty: {}""".stripMargin).get)
-  }
-
-  test("simple map") {
-    assert(Map("key"->"value") == YAMLProcessor.parse("""key: value""").get)
-    assert(Map("key1"->"value1", "key2" -> "value2") == YAMLProcessor.parse(
-      """|
-        				   |key1: value1
-        				   |key2: value2
-        				   |""".stripMargin).get)
-    assert(Map("key1"->"value 1", "key2"-> "value 2") == YAMLProcessor.parse(
-      """|
-        				   |key1: value 1
-        				   |key2: value 2
-        				   |""".stripMargin).get)
-  }
-
-  test("simple list") {
-    assert(List("item1") == YAMLProcessor.parse(
-      """|
-        				   |- item1
-        				   |""".stripMargin).get)
-    assert(List("item1", "item2") == YAMLProcessor.parse(
-      """|
-        				   |- item1
-        				   |- item2
-        				   |""".stripMargin).get)
+            |snafu: []
+            |empty: {}""".stripMargin).get)
   }
 
   test("list of list") {
-    assert(List(
-      List("item11", "item12"),
-      List("item21", "item22")) ==
+    assert(Sequence(Seq(
+      Sequence(Seq(Scalar("item11"), Scalar("item12"))),
+      Sequence(Seq(Scalar("item21"), Scalar("item22")))
+    )) ==
       YAMLProcessor.parse(
         """|
           						|-
@@ -80,36 +87,36 @@ class OtherTest extends FunSuite with Assertions {
           						|""".stripMargin).get)
   }
 
-  test("map of map") {
-    assert(Map("JFrame" -> Map("name" -> "myFrame", "title" -> "My App Frame")) ==
+  test("map of map pairs") {
+    assert(Mapping(Map(
+      Scalar("JFrame") -> Mapping(Map(
+        Scalar("name") -> Scalar("myFrame"), Scalar("title") -> Scalar("My App Frame")
+      ))
+    )) ==
       YAMLProcessor.parse(
         """|
-          						|JFrame:
+          |JFrame:
           | name: myFrame
           | title: My App Frame
-          						|""".stripMargin).get)
+          |""".stripMargin).get)
+  }*/
 
-    assert(Map("JFrame" -> Map("name" -> "myFrame", "title" -> "My App Frame")) ==
-      YAMLProcessor.parse(
-        """|
-          						|JFrame:
-                      |  name: myFrame
-                      |  title: My App Frame
-          						|""".
-          stripMargin).get)
-
-    assert(Map("Mark McGwire" -> Map("hr" -> "65", "avg" -> "0.278"), "Sammy Sosa" -> Map("hr" -> "63", "avg" -> "0.288"))
+  test("map of flow map") {
+    assert(Mapping(Map(
+      Scalar("Mark McGwire") -> Mapping(Map(Scalar("hr") -> Scalar("65"), Scalar("avg") -> Scalar("0.278"))),
+      Scalar("Sammy Sosa") -> Mapping(Map(Scalar("hr") -> Scalar("63"), Scalar("avg") -> Scalar("0.288")))
+    ))
       == YAMLProcessor.parse(
       """
-                             |Mark McGwire: {hr: 65, avg: 0.278}
-                             |Sammy Sosa: {
-                             |     hr: 63,
-                             |   avg: 0.288
-                             |}
-                           """.stripMargin).get)
+        |Sammy Sosa: {
+        |     hr: 63,
+        |   avg: 0.288
+        |}
+        |Mark McGwire: {hr: 65, avg: 0.278}
+      """.stripMargin).get)
   }
 
-  test("list of map") {
+ /* test("list of map") {
     assert(List(
       Map("name"-> "John Smith", "age"->"33"),
       Map("name"-> "Mary Smith", "age"-> "27")) ==
@@ -238,8 +245,7 @@ class OtherTest extends FunSuite with Assertions {
     )
   }
 
-  test(
-    "block skalars") {
+  test("block skalars") {
     assert(
       YAMLProcessor.parse("""
       |name: Mark McGwire
@@ -284,5 +290,6 @@ class OtherTest extends FunSuite with Assertions {
               "description" -> "\ncontrollers.Clients.show2(id: Long)")))))
     val f1 = YAMLProcessor.parse(f.fixture("api1")).get
     assert(f1 == ethalon)
-  }
+  }*/
 }
+

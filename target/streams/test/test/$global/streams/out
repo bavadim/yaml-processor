@@ -1,11 +1,11 @@
-[0m[[0mdebug[0m] [0mRunning TaskDef(processor.OtherTest, org.scalatest.tools.Framework$$anon$1@89da70b, false, [SuiteSelector])[0m
-[0m[[0mdebug[0m] [0mRunning TaskDef(processor.CollectionsTest, org.scalatest.tools.Framework$$anon$1@89da70b, false, [SuiteSelector])[0m
-[0m[[0mdebug[0m] [0mRunning TaskDef(processor.SubparsersTest, org.scalatest.tools.Framework$$anon$1@89da70b, false, [SuiteSelector])[0m
-[0m[[0minfo[0m] [0m[36mRun completed in 2 minutes, 25 seconds.[0m[0m
-[0m[[0minfo[0m] [0m[36mTotal number of tests run: 26[0m[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(processor.OtherTest, org.scalatest.tools.Framework$$anon$1@1604dc15, false, [SuiteSelector])[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(processor.SubparsersTest, org.scalatest.tools.Framework$$anon$1@1604dc15, false, [SuiteSelector])[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(processor.CollectionsTest, org.scalatest.tools.Framework$$anon$1@1604dc15, false, [SuiteSelector])[0m
+[0m[[0minfo[0m] [0m[36mRun completed in 581 milliseconds.[0m[0m
+[0m[[0minfo[0m] [0m[36mTotal number of tests run: 27[0m[0m
 [0m[[0minfo[0m] [0m[36mSuites: completed 3, aborted 0[0m[0m
-[0m[[0minfo[0m] [0m[36mTests: succeeded 3, failed 23, canceled 0, ignored 0, pending 0[0m[0m
-[0m[[0minfo[0m] [0m[31m*** 23 TESTS FAILED ***[0m[0m
+[0m[[0minfo[0m] [0m[36mTests: succeeded 9, failed 18, canceled 0, ignored 0, pending 0[0m[0m
+[0m[[0minfo[0m] [0m[31m*** 18 TESTS FAILED ***[0m[0m
 [0m[[0mdebug[0m] [0mPassed tests:[0m
 [0m[[0mdebug[0m] [0m	processor.SubparsersTest[0m
 [0m[[31merror[0m] [0mFailed tests:[0m

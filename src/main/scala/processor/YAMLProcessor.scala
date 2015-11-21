@@ -1,5 +1,6 @@
 package processor
 
+import scala.collection.immutable.Stream.Empty
 import scala.language.postfixOps
 import scala.util.parsing.combinator.RegexParsers
 import scala.util.parsing.combinator.token.Tokens
@@ -11,28 +12,44 @@ import scala.util.parsing.combinator.token.Tokens
 object YAMLProcessor extends RegexParsers with Tokens {
   override def skipWhitespace = false
 
-  abstract class Node(tag: String)
-  case class Sequence(content: Seq[Node], tag: Option[String] = None) extends Node(tag.getOrElse("!"))
-  case class Mapping(content: Map[Node, Node], tag: Option[String] = None) extends Node(tag.getOrElse("!"))
-  case class Scalar(content: String, tag: Option[String] = None) extends Node(tag.getOrElse("!"))
+  abstract class Node(val tag: String)
+  case class Sequence(content: Seq[Node], override val tag: String = unresolved_tag) extends Node(tag) {
+    override def toString = "[" + (content.foldRight("") {(e, acc) => acc + ", " + e.toString } + " ]").drop(1)
+  }
+  case class Mapping(content: Map[Node, Node], override val tag: String = unresolved_tag) extends Node(tag) {
+    override def toString = "{" + (content.foldRight("") { (t, acc) => acc + ", " + t._1.toString + ": " + t._2.toString } + " }").drop(1)
+  }
+  case class Scalar(content: String, override val tag: String = unresolved_tag) extends Node(tag) {
+    override def toString = "\"" + content + "\""
+  }
+  case class Empty(override val tag: String) extends Node(tag) {
+    override def toString = "(" + tag + ")"
+  }
+
+  def emptyNodeParser(tag: String): PartialFunction[Option[Node], Node] = {
+    case Some(v) => v
+    case None => Empty(tag)
+  }
 
   implicit class ParserExt[T](p: Parser[T]) {
     def `-`(p2: => Parser[T]): Parser[T] = Parser { in =>
       p(in) match {
-        case Success(r, _) => p2(in) match {
+        case Success(r, n) => p2(in) match {
           case Success(_, _)  => Failure("Expected failure", in)
-          case _              => Success(r, in)
+          case _              => Success(r, n)
         }
         case other => other
       }
     }
   }
 
+  val unresolved_tag = "!"
+
   //def parseSeqNode(l: List[Any], tag: String): List[Any] = l
   //def parseMap(m: Map[String, Any], tag: String): Map[String, Any] = m
   //def parseScalar(value: String): String = value
 
-  val c_printable: Parser[String] = "\\p{C}"r
+  val c_printable: Parser[String] = """[\p{Print}]""".r
   val c_byte_order_mark	=	"\uFEFF"
   val c_sequence_entry =	"-"
   val c_mapping_key	=	"?"
@@ -52,15 +69,15 @@ object YAMLProcessor extends RegexParsers with Tokens {
   val c_double_quote	=	"\""
   val c_directive	=	"%"
   val c_reserved =	"@" | "`"
-  val c_indicator	=	  "-" | "?" | ":" | "," | "[" | "]" | "{" | "}" |
+  val c_indicator	= "-" | "?" | ":" | "," | "[" | "]" | "{" | "}" |
     "#" | "&" | "*" | "!" | "|" | ">" | "'" | "\"" |
     "%" | "@" | "`"
   val c_flow_indicator	=	"," | "[" | "]" | "{" | "}"
-  val b_break	= "\r\n" | "\r" | "\n"
+  val b_break	= """[\r\n]|\r|\n""".r
   val b_as_line_feed	=	b_break
   val b_non_content	=	b_break
   val nb_char	=	c_printable - ("\r" | "\n" | c_byte_order_mark)
-  val s_white: Parser[String] = """ """ | "\t"
+  val s_white: Parser[String] = """[ \t]""".r ^^^ " "
   val ns_char	=	nb_char - s_white
   val ns_dec_digit	=	"[0-9]".r ^^ (_.toInt)
   val ns_hex_digit	=	ns_dec_digit | "[a-fA-F]".r
@@ -73,9 +90,9 @@ object YAMLProcessor extends RegexParsers with Tokens {
     "_" | "." | "!" | "~" | "*" | "'" | "(" | ")" | "[" | "]"
   val ns_tag_char	=	ns_uri_char - "!" - c_flow_indicator
   val c_escape	=	"\\"
-  val c_ns_esc_char	=	"\\" //TODO
-  val nb_json = "\u0009" | "[\u0020-\u10FF]" //TODO
-  val b_char = "\n" | "\r"
+  val c_ns_esc_char	=	regex("""\\[/nvrxuUN_"]""".r) //TODO
+  val nb_json = regex("""[\u0009,\u0020-\u10FF]""".r) //TODO
+  val b_char = """[\n\r]""".r
 
   trait Context
   trait BlockContext extends Context
@@ -88,10 +105,12 @@ object YAMLProcessor extends RegexParsers with Tokens {
   case object FlowOut extends FlowContext
 
   def s_indent(n: Int): Parser[Int] = (s"^[ ]{$n}"r) ^^ { _.length }
-  def s_indentGreaterOrEq(n: Int): Parser[Int] = (if(n > 0) s"^[ ]{$n,}"r else s"^[ ]{0,}"r) ^^ { _.length }
-  def s_indentLess(n: Int): Parser[Int] = (s"^[ ]{0,${n-1}}"r) ^^ { _.length }
+  def s_indentGreaterZ(n: Int): Parser[Int] =
+    if (n == -1) s"^[ ]*".r ^^ { _.length } else s"^[ ]{${n + 1},}".r ^^ { _.length }
+  val s_indentCount: Parser[Int] = s"^[ ]*".r ^^ { _.length }
+  def s_indentLess(n: Int): Parser[Int] = if (n-1 > 0) (s"^[ ]{0,${n-1}}"r) ^^ { _.length } else Parser {in => Failure("", in) }
   def s_indentLessOrEq(n: Int): Parser[Int] = (s"^[ ]{0,$n}"r) ^^ { _.length }
-  val s_separate_in_line	=	s_white.+ | "^".r /* Start of line */
+  val s_separate_in_line	=	regex("[ \t]+|$]".r) /* Start of line */
   def s_block_line_prefix(n: Int): Parser[Unit] = s_indent(n) ^^ (_ => ())
   def s_flow_line_prefix(n: Int): Parser[Unit] =	(s_indent(n) ~ s_separate_in_line.?) ^^ (_ => ())
   def s_line_prefix(n: Int,c: Context): Parser[Unit] = c match {
@@ -163,11 +182,11 @@ object YAMLProcessor extends RegexParsers with Tokens {
   //Alias Nodes
   val c_ns_alias_node: Parser[Node]	=	"*" ~ ns_anchor_name ^^ {_ =>
     println("Aliases not supported yet!")
-    Scalar("Aliases not supported yet!")
+    Scalar("Aliases not supported yet!", unresolved_tag)
   }
   //Empty Nodes
-  val e_scalar: Parser[String] = "" ^^ (_ => "") //TODO
-  val e_node: Parser[Node]	=	e_scalar ^^ (_ => Scalar(""))
+  //val e_scalar: Parser[String] = "" ^^ (_ => "") //TODO
+  //val e_node: Parser[Node]	=	e_scalar ^^ (_ => Scalar("", unresolved_tag))
   //Flow Scalar Styles
   val nb_double_char = c_ns_esc_char | (nb_json - "\\" - "\"" )
   val ns_double_char = nb_double_char - s_white
@@ -226,7 +245,7 @@ object YAMLProcessor extends RegexParsers with Tokens {
     case _ => throw new Exception("Wrong BNF")
 
   }
-  def nb_ns_plain_in_line(c: Context): Parser[String] = (s_white.* ~> ns_plain_char(c)).* ^^ (_.mkString)
+  def nb_ns_plain_in_line(c: Context): Parser[String] = (s_white.* ~ ns_plain_char(c) ^^ { case wl ~ ch => wl.mkString + ch }).* ^^ (_.mkString)
   def ns_plain_one_line(c: Context): Parser[String]	=	ns_plain_first(c) ~ nb_ns_plain_in_line(c) ^^ {case s1 ~ s2 => s1 + s2}
   def s_ns_plain_next_line(n: Int, c: Context) = s_flow_folded(n) ~> ns_plain_char(c) ~ nb_ns_plain_in_line(c) ^^ {case s1 ~ s2 => s1 + s2}
   def ns_plain_multi_line(n: Int, c: Context): Parser[String] =
@@ -247,11 +266,11 @@ object YAMLProcessor extends RegexParsers with Tokens {
     case _ => throw new Exception("Wrong BNF")
   }
   //Flow mappings
-  def c_ns_flow_map_adjacent_value(n: Int, c: Context): Parser[Node] = ":" ~> ((s_separate(n, c).? ~> ns_flow_node(n, c)) | e_node ) /* Value */
+  def c_ns_flow_map_adjacent_value(n: Int, c: Context): Parser[Node] = ":" ~> (opt(s_separate(n, c).? ~> ns_flow_node(n, c)) ^^ emptyNodeParser("c_ns_flow_map_adjacent_value") /*| e_node*/ ) /* Value */
   def c_s_implicit_json_key(c: Context): Parser[Node] = c_flow_json_node(0, c) <~ s_separate_in_line.?
   /* At most 1024 characters altogether */
-  def ns_flow_map_yaml_key_entry(n: Int, c: Context): Parser[(Node, Node)] = ns_flow_yaml_node(n,c) ~ ((s_separate(n,c).? ~>
-    c_ns_flow_map_separate_value(n,c)) | e_node) ^^ { case k ~ v => (k, v) }
+  def ns_flow_map_yaml_key_entry(n: Int, c: Context): Parser[(Node, Node)] =
+    ns_flow_yaml_node(n,c) ~ (opt(s_separate(n,c).? ~> c_ns_flow_map_separate_value(n,c)) ^^ emptyNodeParser("ns_flow_map_yaml_key_entry") /*| e_node*/) ^^ { case k ~ v => (k, v) }
   def c_ns_flow_map_json_key_entry(n: Int, c: Context): Parser[(Node, Node)] = c_flow_json_node(n,c) ~ ((s_separate(n,c).? ~>
     c_ns_flow_map_adjacent_value(n,c)) | e_node) ^^ {case k ~ v => k -> v }
   def ns_flow_map_implicit_entry(n: Int, c: Context): Parser[(Node, Node)] = ns_flow_map_yaml_key_entry(n,c) |
@@ -268,20 +287,20 @@ object YAMLProcessor extends RegexParsers with Tokens {
   def ns_flow_pair(n: Int, c: Context): Parser[(Node, Node)] =
     ("?" ~ s_separate(n,c) ~> ns_flow_map_explicit_entry(n,c)) | ns_flow_pair_entry(n, c)
   def c_ns_flow_map_separate_value(n: Int, c: Context): Parser[Node] = ":" /* Not followed by an ns-plain-safe(c) */ ~>
-    ((s_separate(n,c) ~> ns_flow_node(n,c)) | e_node /* Value */ )
+    (( s_separate(n,c) ~> ns_flow_node(n,c) ) | e_node /* Value */ )
   def c_ns_flow_map_empty_key_entry(n: Int, c: Context): Parser[(Node, Node)] =
     e_node /* Key */ ~ c_ns_flow_map_separate_value(n,c) ^^ {case k ~ v => k -> v }
   def ns_flow_map_entry(n: Int, c: Context): Parser[(Node, Node)] =
     ("?" ~ s_separate(n,c) ~> ns_flow_map_explicit_entry(n,c)) | ns_flow_map_implicit_entry(n,c)
-  def ns_s_flow_map_entries(n: Int, c: Context): Parser[Map[Node, Node]] =	ns_flow_map_entry(n,c) ~ s_separate(n,c).? ~
+  def ns_s_flow_map_entries(n: Int, c: Context): Parser[Map[Node, Node]] = ns_flow_map_entry(n,c) ~ s_separate(n,c).? ~
     ("," ~ s_separate(n,c).? ~> ns_s_flow_map_entries(n,c).? ).? ^^ {
     case h ~ _ ~ Some(Some(t)) => t + h
     case h ~ _ ~ _ => Map(h)
   }
   def c_flow_mapping(n: Int, c: Context): Parser[Map[Node, Node]] =
-    "{" ~ s_separate(n, c).? ~> ns_s_flow_map_entries(n, in_flow(c)).? <~ "}" ^^ (_.getOrElse(Map()))
+    "{" ~ s_separate(n, c).? ~> ns_s_flow_map_entries(n, in_flow(c)).?  <~ "}" ^^ (_.getOrElse(Map()))
   //Flow seq
-  def ns_flow_seq_entry(n: Int,c: Context): Parser[Node] = (ns_flow_pair(n,c) ^^ {m => Mapping(Map(m))}) | ns_flow_node(n,c)
+  def ns_flow_seq_entry(n: Int,c: Context): Parser[Node] = (ns_flow_pair(n,c) ^^ {m => Mapping(Map(m), unresolved_tag)}) | ns_flow_node(n,c)
   def ns_s_flow_seq_entries(n: Int, c: Context): Parser[Seq[Node]] =
     ns_flow_seq_entry(n,c) ~ s_separate(n,c).? ~ ("," ~ s_separate(n,c).? ~> ns_s_flow_seq_entries(n,c).?).? ^^ {
       case ent ~ _ ~ Some(Some(t)) => t.+:(ent)
@@ -292,21 +311,21 @@ object YAMLProcessor extends RegexParsers with Tokens {
   def ns_flow_yaml_content(n: Int, c: Context): Parser[String] = ns_plain(n,c)
   //Flow nodes
   def c_flow_json_content(n: Int, c: Context, prop: Option[(String, String)]): Parser[Node] =
-    c_flow_sequence(n, c) ^^ (Sequence(_, prop.map(_._1))) | c_flow_mapping(n, c) ^^ (Mapping(_, prop.map(_._1))) |
-      (c_single_quoted(n, c) | c_double_quoted(n, c)) ^^ (Scalar(_, prop.map(_._1)))
+    c_flow_sequence(n, c) ^^ (Sequence(_, prop.map(_._1).getOrElse(unresolved_tag))) | c_flow_mapping(n, c) ^^ (Mapping(_, prop.map(_._1).getOrElse(unresolved_tag))) |
+      (c_single_quoted(n, c) | c_double_quoted(n, c)) ^^ (Scalar(_, prop.map(_._1).getOrElse(unresolved_tag)))
   def ns_flow_content(n: Int, c: Context, prop: Option[(String, String)]): Parser[Node] =
-    (ns_flow_yaml_content(n,c) ^^ (Scalar(_, prop.map(_._1)))) | c_flow_json_content(n,c, prop)
+    (ns_flow_yaml_content(n,c) ^^ (Scalar(_, prop.map(_._1).getOrElse(unresolved_tag)))) | c_flow_json_content(n,c, prop)
   def ns_flow_yaml_node(n: Int, c: Context): Parser[Node] =
-    c_ns_alias_node | (ns_flow_yaml_content(n, c) ^^ (Scalar(_))) |
+    c_ns_alias_node | (ns_flow_yaml_content(n, c) ^^ (Scalar(_, unresolved_tag))) |
       c_ns_properties(n, c) >> { case (tag, anchor) => //TODO anchor
-        ((s_separate(n,c) ~> ns_flow_yaml_content(n,c)) | e_scalar) ^^ (Scalar(_, Some(tag)))
+        ((s_separate(n,c) ~> ns_flow_yaml_content(n,c)) | e_scalar) ^^ (Scalar(_, tag))
       }
   def c_flow_json_node(n: Int, c: Context): Parser[Node] =
     (c_ns_properties(n, c) <~ s_separate(n, c)).? >> (c_flow_json_content(n, c, _))
   def ns_flow_node(n: Int, c: Context): Parser[Node] =
     c_ns_alias_node | ns_flow_content(n, c, None) |
       (c_ns_properties(n,c) >> { props =>
-        (s_separate(n,c) ~> ns_flow_content(n,c, Some(props))) | e_scalar ^^ (Scalar(_, Some(props._1)))
+        (s_separate(n,c) ~> ns_flow_content(n,c, Some(props))) | e_scalar ^^ (Scalar(_, props._1))
       })
   //Block Styles
   // Block Scalar Styles
@@ -319,7 +338,7 @@ object YAMLProcessor extends RegexParsers with Tokens {
   def c_b_block_header: Parser[(Int, BlockChompingIndicator)] = //TODO
     ((c_indentation_indicator ~ c_chomping_indicator) ^^ { case i ~ c => (i, c) } |
     (c_chomping_indicator ~ c_indentation_indicator) ^^ { case c ~ i => (i, c) }) <~ s_b_comment
-  def c_indentation_indicator: Parser[Int]	=	ns_dec_digit | s_indentGreaterOrEq(0)
+  def c_indentation_indicator: Parser[Int]	=	ns_dec_digit | s_indentCount
   def c_chomping_indicator: Parser[BlockChompingIndicator] = opt(("-" ^^^ Strip) | ("+" ^^^ Keep)) ^^ {
     case Some(c) => c
     case None => Clip
@@ -367,18 +386,18 @@ object YAMLProcessor extends RegexParsers with Tokens {
     }
   //Block Collection Styles
   //Block Sequences
-  def l_block_sequence(n: Int, props: Option[(String, String)]): Parser[Sequence] = (s_indentGreaterOrEq(n) >> { m =>
+  def l_block_sequence(n: Int, props: Option[(String, String)]): Parser[Sequence] = (s_indentGreaterZ(n) >> { m =>
     c_l_block_seq_entry(m)
-  }).+ ^^ (Sequence(_, props.map(t => t._1)))
-  def c_l_block_seq_entry(n: Int): Parser[Node] = "-" /* Not followed by an ns-char */  ~> s_l_block_indented(n, BlockIn)
-  def s_l_block_indented(n: Int, c: Context): Parser[Node] = (s_indentGreaterOrEq(0) >> { m =>
-    ns_l_compact_sequence(n + 1 + m, None) | ns_l_compact_mapping(n + 1 + m, None) }) | s_l_block_node(n,c) /*|
-    ( e_node <~ s_l_comments )*/
+  }).+ ^^ (Sequence(_, props.map(t => t._1).getOrElse(unresolved_tag)))
+  def c_l_block_seq_entry(n: Int): Parser[Node] = "-" /* Not followed by an ns-char */ ~> s_l_block_indented(n, BlockIn)
+  def s_l_block_indented(n: Int, c: Context): Parser[Node] = (s_indentCount >> { m =>
+    ns_l_compact_sequence(n + 1 + m, None) | ns_l_compact_mapping(n + 1 + m, None) }) | s_l_block_node(n,c) |
+    ( e_node <~ s_l_comments )
   def ns_l_compact_sequence(n: Int, props: Option[(String, String)]): Parser[Sequence] = c_l_block_seq_entry(n) ~
-    (s_indent(n) ~> c_l_block_seq_entry(n)).* ^^ { case h ~ l => Sequence(h :: l, props.map(_._1))}
+    (s_indent(n) ~> c_l_block_seq_entry(n)).* ^^ { case h ~ l => Sequence(h :: l, props.map(_._1).getOrElse(unresolved_tag))}
   //Block Mappings
   def l_block_mapping(n: Int, props: Option[(String, String)]): Parser[Mapping] =
-    (s_indentGreaterOrEq(n) >> { m => ns_l_block_map_entry(m) }).+ ^^ { p => Mapping(p.toMap, props.map(_._1)) }
+    (s_indentGreaterZ(n) >> { m => ns_l_block_map_entry(m) }).+ ^^ { p => Mapping(p.toMap, props.map(_._1).getOrElse(unresolved_tag)) }
   def ns_l_block_map_entry(n: Int): Parser[(Node, Node)] = c_l_block_map_explicit_entry(n) | ns_l_block_map_implicit_entry(n)
   def c_l_block_map_explicit_entry(n: Int): Parser[(Node, Node)] =
     c_l_block_map_explicit_key(n) ~ (l_block_map_explicit_value(n) | e_node) ^^ { case k ~ v => (k, v) }
@@ -390,15 +409,15 @@ object YAMLProcessor extends RegexParsers with Tokens {
   def c_l_block_map_implicit_value(n: Int): Parser[Node] = ":" ~> (s_l_block_node(n, BlockOut) | (e_node <~ s_l_comments))
   def ns_l_compact_mapping(n: Int, props: Option[(String, String)]): Parser[Mapping] =
     ns_l_block_map_entry(n) ~ (s_indent(n) ~> ns_l_block_map_entry(n)).* ^^ {
-      case h ~ t => Mapping((h :: t).toMap, props.map(_._1))
+      case h ~ t => Mapping((h :: t).toMap, props.map(_._1).getOrElse(unresolved_tag))
     }
   //Block Nodes
   def s_l_block_node(n: Int, c: Context): Parser[Node] = s_l_block_in_block(n, c) | s_l_flow_in_block(n)
-  def s_l_flow_in_block(n: Int): Parser[Node] = s_separate(n + 1, FlowOut) ~> ns_plain_multi_line(n + 1, FlowOut)/*ns_flow_node(n + 1, FlowOut)*/ <~ opt(s_l_comments)
+  def s_l_flow_in_block(n: Int): Parser[Node] = s_separate(n + 1, FlowOut) ~> ns_flow_node(n + 1, FlowOut) <~ s_l_comments
   def s_l_block_in_block(n: Int, c: Context): Parser[Node] = s_l_block_scalar(n, c) | s_l_block_collection(n, c)
   def s_l_block_scalar(n: Int, c: Context): Parser[Scalar] = s_separate(n + 1, c) ~>
     (c_ns_properties(n + 1, c) <~ s_separate(n + 1, c)).? >> { o =>
-    (c_l_literal(n) | c_l_folded(n)) ^^ (Scalar(_, o.map(op => op._1)))
+    (c_l_literal(n) | c_l_folded(n)) ^^ (Scalar(_, o.map(op => op._1).getOrElse(unresolved_tag)))
   }
   def s_l_block_collection(n: Int, c: Context): Parser[Node] = {
     def seq_spaces(n: Int, c: Context): Int = c match {
@@ -432,10 +451,10 @@ object YAMLProcessor extends RegexParsers with Tokens {
 
   val mapSeparator = ": \r?\n?"r
   val seqIndicator = "- ?\r?\n?"r
-  val comment = """ *#[^\r\n]*"""
+  val comment =  *#[^\r\n]*
   val commentLine = ("\n*" + comment + "\r*\n+").r
-  def mappingKey = """[^-:\{\[\r\n][^-:\r\n]*"""r
-  val newLine = commentLine | """ *\r*\n+""".r
+  def mappingKey = [^-:\{\[\r\n][^-:\r\n]*r
+  val newLine = commentLine |  *\r*\n+.r
   val inlineSeparator = " *,[ \r\n]+".r
   val mapBegin = """\{[ \n\r]*"""r
   val mapEnd = """[\n ]*\}"""r

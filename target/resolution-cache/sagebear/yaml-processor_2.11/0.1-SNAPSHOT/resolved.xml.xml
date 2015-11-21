@@ -4,7 +4,7 @@
 		module="yaml-processor_2.11"
 		revision="0.1-SNAPSHOT"
 		status="integration"
-		publication="20151120185408"
+		publication="20151121020011"
 	>
 		<description>
 		yaml-processor

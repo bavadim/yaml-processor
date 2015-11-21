@@ -1,3 +1,5 @@
 testOnly OtherTest
 testOnly processorOtherTest
 testOnly processor.OtherTest
+testOnly processorOtherTest
+testOnly processor.OtherTest

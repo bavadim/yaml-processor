@@ -4,7 +4,7 @@
 		module="yaml-parser-build"
 		revision="0.1-SNAPSHOT"
 		status="integration"
-		publication="20151120181428"
+		publication="20151121020006"
 		e:sbtVersion="0.13" e:scalaVersion="2.10"
 	>
 		<description>
