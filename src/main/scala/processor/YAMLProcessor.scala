@@ -130,7 +130,7 @@ object YAMLProcessor extends RegexParsers with Tokens {
   val c_nb_comment_text: Parser[Unit]	=	"#" ~> nb_char.* ^^^ ()
   val b_comment	=	b_non_content //TODO EOF
   val s_b_comment	=	( s_separate_in_line ~> c_nb_comment_text? ).? ~> b_comment
-  val l_comment	=	s_separate_in_line ~> c_nb_comment_text.? ~> b_comment
+  val l_comment	=	s_separate_in_line ~> c_nb_comment_text.? ~> b_comment ^^^ ""
   val s_l_comments: Parser[Unit] =	{
     (s_b_comment | "^".r /* Start of line */ ) ~> l_comment.* ^^ (_ => ())
   }
@@ -452,7 +452,6 @@ object YAMLProcessor extends RegexParsers with Tokens {
 
   def l_yaml_stream = {
     //Documents
-    val l_document_prefix	=	c_byte_order_mark.? <~ l_comment.*
     //Document Markers
     val c_directives_end =	"---"
     val c_document_end = "..."
@@ -638,10 +637,20 @@ object YAMLProcessor extends RegexParsers with Tokens {
     //Streams
     val l_any_document = l_directive_document | l_explicit_document | l_bare_document
 
-    //l_document_prefix.* ~ l_any_document.? ~ ((l_document_suffix.+ ~ l_document_prefix.* ~ l_any_document.?) |
-    //  (l_document_prefix.* ~ l_explicit_document.?)).*
+   // l_document_prefix.* ~ l_any_document.? ~ ((l_document_suffix.+ ~ l_document_prefix.* ~ l_any_document.?) |
+   //   (l_document_prefix.* ~ l_explicit_document.?)).*
 
-    l_any_document
+    //TODO
+    // val l_document_prefix	=	c_byte_order_mark.? ~ l_comment.*
+    val l_document_prefix_fixed	=	c_byte_order_mark | l_comment
+
+    (l_document_prefix_fixed.* ~> l_any_document.? ^^ {
+      case Some(v) => v
+      case None => Empty
+    }) ~ repsep(l_any_document | l_explicit_document, (l_document_suffix | l_document_prefix_fixed).*) ^^ {
+      case d1 ~ List() => d1
+      case d1 ~ l => d1 :: l
+    }
   }
 
   def parse(text : String): ParseResult[Any] = parse(l_yaml_stream, text)
