@@ -1,6 +1,7 @@
 package processor
 
 import org.scalatest.{Assertions, FunSuite}
+import processor.YAMLProcessor.{Node, Mapping, Scalar, Sequence}
 
 /**
  * @author vadim
@@ -11,33 +12,38 @@ class CollectionsTest extends FunSuite with Assertions {
 
   test("sequence of scalars") {
     assert(YAMLProcessor.parse(f.fixture("Example2.1.Sequence_of_Scalars")).get ==
-      List("Mark McGwire", "Sammy Sosa", "Ken Griffey"))
+      Sequence(Seq("Mark McGwire", "Sammy Sosa", "Ken Griffey")))
   }
 
   test("mapping scalars to scalars") {
     assert(YAMLProcessor.parse(f.fixture("Example2.2.Mapping_Scalars_to_Scalars")).get ==
-      Map("hr" -> "65", "avg" -> "0.278", "rbi" -> "147"))
+      Mapping(Map(Scalar("hr") -> "65", Scalar("avg") -> "0.278", Scalar("rbi") -> "147")))
   }
 
   test("mapping scalars to sequences") {
     assert(YAMLProcessor.parse(f.fixture("Example2.3.Mapping_Scalars_to_Sequences")).get ==
-      Map("american" -> List("Boston Red Sox", "Detroit Tigers", "New York Yankees"),
-        "national" -> List("New York Mets", "Chicago Cubs", "Atlanta Braves")))
+      Mapping(Map(Scalar("american") -> Sequence(List("Boston Red Sox", "Detroit Tigers", "New York Yankees")),
+        Scalar("national") -> Sequence(List("New York Mets", "Chicago Cubs", "Atlanta Braves")))))
   }
 
   test("sequence of mappings") {
     assert(YAMLProcessor.parse(f.fixture("Example2.4.Sequence_of_Mappings")).get ==
-      List(Map("name" -> "Mark McGwire", "hr" -> "65", "avg" -> "0.278"),
-        Map("name" -> "Sammy Sosa", "hr" -> "63", "avg" -> "0.288")))
+      Sequence(List(Mapping(Map(Scalar("name") -> "Mark McGwire", Scalar("hr") -> "65", Scalar("avg") -> "0.278")),
+        Mapping(Map(Scalar("name") -> Scalar("Sammy Sosa"), Scalar("hr") -> "63", Scalar("avg") -> "0.288")))))
   }
 
   test("sequence of sequences") {
     assert(YAMLProcessor.parse(f.fixture("Example2.5.Sequence_of_Sequences")).get ==
-      List(List("name", "hr", "avg"), List("Mark McGwire", "65", "0.278"), List("Sammy Sosa", "63", "0.288")))
+      Sequence(List(Sequence(List("name", "hr", "avg")),
+        Sequence(List("Mark McGwire", "65", "0.278")), Sequence(List("Sammy Sosa", "63", "0.288")))))
   }
 
   test("mapping of mappings") {
     assert(YAMLProcessor.parse(f.fixture("Example2.6.Mapping_of_Mappings")).get ==
-      Map("Mark McGwire" -> Map("hr" -> "65", "avg" -> "0.278"), "Sammy Sosa" -> Map("hr" -> "63", "avg" -> "0.288")))
+      Mapping(Map(
+        Scalar("Mark McGwire") -> Mapping(Map(Scalar("hr") -> "65", Scalar("avg") -> "0.278")),
+        Scalar("Sammy Sosa") -> Mapping(Map(Scalar("hr") -> "63", Scalar("avg") -> "0.288")))
+      )
+    )
   }
 }

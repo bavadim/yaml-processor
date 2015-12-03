@@ -1,3 +1,0 @@
-[0m[[0minfo[0m] [0m[32mOtherTest:[0m[0m
-[0m[[0minfo[0m] [0m[31m- map of flow map *** FAILED ***[0m[0m
-[0m[[0minfo[0m] [0m[31m  { "Sammy Sosa": { "avg": "0.288", "hr": "63" }, "Mark McGwire": { "avg": "0.278", "hr": "65" } } did not equal { "Sammy Sosa": "!!!!!" } (OtherTest.scala:105)[0m[0m
