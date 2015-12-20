@@ -4,6 +4,7 @@ import scala.collection.immutable.Stream.Empty
 import scala.language.{implicitConversions, postfixOps}
 import scala.util.parsing.combinator.RegexParsers
 import scala.util.parsing.combinator.token.Tokens
+import scala.util.parsing.input.CharArrayReader
 
 /**
  * @author vadim
@@ -127,7 +128,7 @@ object YAMLProcessor extends RegexParsers with Tokens {
   }
   def s_flow_folded(n: Int): Parser[String]	=	s_separate_in_line.? ~> b_l_folded(n, FlowIn) <~ s_flow_line_prefix(n)
   //Comments
-  val c_nb_comment_text: Parser[Unit]	=	"#" ~> nb_char.* ^^^ ()
+  val c_nb_comment_text: Parser[Unit]	=	"#" ~> nb_char.* ^^^ { () }
   val b_comment	=	b_non_content //TODO EOF
   val s_b_comment	=	( s_separate_in_line ~> c_nb_comment_text? ).? ~> b_comment
   val l_comment	=	s_separate_in_line ~> c_nb_comment_text.? ~> b_comment ^^^ ""
@@ -653,5 +654,6 @@ object YAMLProcessor extends RegexParsers with Tokens {
     }
   }
 
-  def parse(text : String): ParseResult[Any] = parse(l_yaml_stream, text)
+  def parse(text: CharArrayReader): ParseResult[Any] = parse(l_yaml_stream, text)
+  def parse(text: String): ParseResult[Any] = parse(l_yaml_stream, new CharArrayReader(text.toCharArray))
 }
